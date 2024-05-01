@@ -1,0 +1,71 @@
+CREATE VIEW favoriteItemsView AS
+SELECT
+        id,
+        title,
+        poster_url,
+        poster_last_updated,
+        overview,
+        popularity,
+        last_modified_at,
+        favorite,
+        1 AS isMovie,
+        favorite_modified_at,
+        (
+            SELECT DISTINCT COUNT(contentItem.list_id) FROM contentItem
+            LEFT JOIN contentList ON contentItem.list_id = contentList._id
+            WHERE movie_id = id AND contentList.in_library
+
+        ) AS inLists
+    FROM movie WHERE favorite = 1
+
+    UNION
+
+    SELECT
+        id,
+        title,
+        poster_url,
+        poster_last_updated,
+        overview,
+        popularity,
+        last_modified_at,
+        favorite,
+        0 AS isMovie,
+        favorite_modified_at,
+       (
+            SELECT DISTINCT COUNT(contentItem.list_id) FROM contentItem
+            LEFT JOIN contentList ON contentItem.list_id = contentList._id
+            WHERE show_id = id AND contentList.in_library
+
+       ) AS inLists
+    FROM show WHERE favorite = 1;
+
+selectAll:
+SELECT * FROM favoriteItemsView;
+
+favoritesMostRecent:
+SELECT * FROM favoriteItemsView
+ORDER BY favorite_modified_at DESC LIMIT :limit;
+
+favoritesOrderByRecent:
+SELECT * FROM favoriteItemsView WHERE  (title LIKE :query OR :query = '')
+ORDER BY favorite_modified_at DESC;
+
+favoritesOrderByTitle:
+SELECT * FROM favoriteItemsView WHERE  (title LIKE :query OR :query = '')
+ORDER BY title DESC;
+
+favoritesOrderByMovieOrShow:
+SELECT * FROM favoriteItemsView WHERE :showsOnly != isMovie  AND favorite AND (title LIKE :query OR :query = '')
+ORDER BY title DESC;
+
+selectFavoriteMostRecent:
+  SELECT
+        favorite_modified_at
+    FROM movie
+
+    UNION
+
+    SELECT
+        favorite_modified_at
+    FROM show
+  ORDER BY favorite_modified_at DESC LIMIT 1;

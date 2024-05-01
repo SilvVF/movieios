@@ -1,0 +1,58 @@
+CREATE TABLE recommendation (
+    list_id INTEGER NOT NULL DEFAULT -1,
+    movie_id INTEGER,
+    show_id INTEGER,
+    created_at INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (list_id, movie_id, show_id),
+    FOREIGN KEY (movie_id) REFERENCES movie(id) ON DELETE CASCADE,
+    FOREIGN KEY (show_id) REFERENCES show(id) ON DELETE CASCADE
+);
+
+insert:
+INSERT OR IGNORE INTO recommendation(list_id, movie_id, show_id, created_at)
+VALUES (:listId,:movieId, :showId, strftime('%s', 'now'));
+
+deleteFromList:
+DELETE FROM recommendation WHERE list_id = :listId AND movie_id = :movieId AND show_id = :showId;
+
+clearByListId:
+DELETE FROM recommendation WHERE list_id = :id;
+
+selectRecommendationContentByListId:
+SELECT
+     recommendation.movie_id AS movieId,
+     recommendation.show_id AS showId,
+     COALESCE(m.title, s.title) AS title,
+     COALESCE(m.poster_url, s.poster_url) AS posterUrl,
+     COALESCE(m.poster_last_updated, s.poster_last_updated) AS posterLastUpdated,
+     COALESCE(m.favorite, s.favorite) AS favorite,
+     COALESCE(m.overview, s.overview) AS overview,
+     COALESCE(m.popularity, s.popularity) AS popularity,
+     COALESCE(m.last_modified_at, s.last_modified_at) AS lastModified,
+     (
+        SELECT DISTINCT COUNT(contentItem.list_id) FROM contentItem WHERE show_id = s.id OR movie_id = m.id
+     ) AS inLists
+FROM recommendation
+LEFT JOIN movie AS m ON recommendation.movie_id = m.id
+LEFT JOIN show AS s ON recommendation.show_id = s.id
+WHERE recommendation.list_id = :id AND
+CASE WHEN recommendation.list_id = -1 THEN COALESCE(m.favorite, s.favorite) = 0
+ELSE (
+    CASE WHEN recommendation.movie_id IS NOT NULL
+              THEN recommendation.movie_id NOT IN (
+                     SELECT movie_id FROM contentItem
+                     WHERE contentItem.list_id = recommendation.list_id
+                     AND contentItem.movie_id != -1
+              )
+              ELSE recommendation.show_id NOT IN (
+                     SELECT show_id FROM contentItem
+                     WHERE contentItem.list_id = recommendation.list_id
+                     AND contentItem.show_id != -1
+              )
+          END
+ )
+END
+ORDER BY created_at DESC;
+
+selectRecommendationsChangedAt:
+SELECT created_at FROM recommendation WHERE list_id = :id ORDER BY created_at DESC LIMIT 1;

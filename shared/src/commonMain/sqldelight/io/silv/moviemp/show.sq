@@ -1,0 +1,118 @@
+import kotlin.Boolean;
+import kotlin.Int;
+import kotlin.String;
+import kotlin.collections.List;
+
+CREATE TABLE show (
+        id INTEGER PRIMARY KEY NOT NULL,
+        title TEXT NOT NULL,
+        overview TEXT NOT NULL ,
+        genres TEXT AS List<String>,
+        genre_ids TEXT AS List<Int>,
+        original_language TEXT,
+        vote_count INTEGER,
+        release_date TEXT,
+        poster_url TEXT,
+        poster_last_updated INTEGER NOT NULL DEFAULT 0,
+        favorite INTEGER AS Boolean NOT NULL DEFAULT 0,
+        external_url TEXT,
+        popularity REAL,
+        status INTEGER,
+        production_companies TEXT AS List<String>,
+        last_modified_at INTEGER NOT NULL DEFAULT 0,
+        favorite_modified_at INTEGER
+);
+
+
+CREATE INDEX library_show_favorite_index ON show(favorite) WHERE favorite = 1;
+
+CREATE TRIGGER update_last_favorite_at_shows
+AFTER UPDATE OF favorite ON show
+BEGIN
+  UPDATE show
+  SET favorite_modified_at = strftime('%s', 'now')
+  WHERE id = new.id;
+END;
+
+CREATE TRIGGER delete_show_from_lists
+AFTER DELETE ON show
+FOR EACH ROW
+BEGIN
+  DELETE FROM contentItem
+  WHERE show_id = old.id;
+END;
+
+CREATE TRIGGER update_last_modified_at_shows
+AFTER UPDATE ON show
+FOR EACH ROW
+BEGIN
+  UPDATE show
+  SET last_modified_at = strftime('%s', 'now')
+  WHERE id = new.id;
+END;
+
+
+selectById:
+SELECT
+    show.*,
+    (
+        SELECT DISTINCT COUNT(contentItem.list_id) FROM contentItem
+        LEFT JOIN contentList ON contentItem.list_id = contentList._id
+        WHERE show_id = id AND contentList.in_library
+    )
+FROM show WHERE id = :id LIMIT 1;
+
+selectFavorites:
+SELECT
+    show.*,
+    (
+        SELECT DISTINCT COUNT(contentItem.list_id) FROM contentItem
+        LEFT JOIN contentList ON contentItem.list_id = contentList._id
+        WHERE show_id = id AND contentList.in_library
+    )
+    FROM show
+    WHERE favorite
+    AND (title LIKE :query OR :query = '');
+
+selectShowPartialById:
+SELECT
+id,
+title,
+poster_url,
+poster_last_updated,
+favorite,
+last_modified_at,
+popularity,
+overview,
+(
+    SELECT DISTINCT COUNT(contentItem.list_id)
+    FROM contentItem
+    LEFT JOIN contentList ON contentItem.list_id = contentList._id
+    WHERE show_id = id AND contentList.in_library
+)
+FROM show WHERE id = :id LIMIT 1;
+
+insert:
+INSERT OR IGNORE INTO show(id, title, overview, genres, genre_ids, original_language, vote_count, release_date, poster_url, poster_last_updated, favorite, external_url, popularity, status)
+VALUES (:id, :title,:overview,:genres, :genreIds,:originalLanguage,:voteCount,:releaseDate, :posterUrl, :posterLastUpdated, :favorite, :externalUrl, :popularity, :status);
+
+lastInsertRowId:
+SELECT last_insert_rowid();
+
+update:
+UPDATE show SET
+    title = COALESCE(:title, title),
+    overview = COALESCE(:overview, overview),
+    genres = COALESCE(:genres, genres),
+    genre_ids = COALESCE(:genreIds, genre_ids),
+    original_language = COALESCE(:originalLanguage, original_language),
+    vote_count = COALESCE(:voteCount, vote_count),
+    release_date = COALESCE(:releaseDate, release_date),
+    poster_url = COALESCE(:posterUrl, poster_url),
+    poster_last_updated = COALESCE(:posterLastUpdated, poster_last_updated),
+    favorite = COALESCE(:favorite, favorite),
+    external_url = COALESCE(:externalUrl, external_url),
+    popularity = COALESCE(:popularity, popularity),
+    status = COALESCE(:status, status),
+    production_companies = COALESCE(:productionCompanies, production_companies)
+WHERE id = :showId;

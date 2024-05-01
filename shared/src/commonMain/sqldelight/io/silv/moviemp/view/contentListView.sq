@@ -1,0 +1,71 @@
+CREATE VIEW contentListView AS
+SELECT
+    DISTINCT(cl._id) AS list_id,
+    cl.supabase_id AS supabase_id,
+    cl.created_by  AS created_by,
+    cl.username AS username,
+    cl.description AS list_description,
+    cl.synced_at AS synced_at,
+    cl.public AS list_public,
+    cl.name AS list_name,
+    cl.last_modified_at AS list_modified_at,
+    cl.poster_last_updated AS list_poster_last_updated,
+    cl.created_at AS list_created_at,
+    cl.in_library AS inLibrary,
+    cl.subscribers AS subscribers,
+    cl.pinned,
+    clj.movie_id AS movieId,
+    clj.show_id AS showId,
+    clj.created_at AS addedToListAt,
+    COALESCE(m.title, s.title) AS title,
+    COALESCE(m.poster_url, s.poster_url) AS posterUrl,
+    COALESCE(m.poster_last_updated, s.poster_last_updated) AS posterLastUpdated,
+    COALESCE(m.favorite, s.favorite) AS favorite,
+    COALESCE(m.overview, s.overview) AS overview,
+    COALESCE(m.popularity, s.popularity) AS popularity,
+    (
+       SELECT DISTINCT COUNT(contentItem.list_id)
+       FROM contentItem
+       WHERE show_id = s.id OR movie_id = m.id AND (
+            SELECT in_library
+            FROM contentList
+            WHERE contentList._id = contentItem.list_id
+       )
+    ),
+    COALESCE(m.last_modified_at, s.last_modified_at) AS content_last_modified
+FROM
+    contentList cl
+LEFT JOIN
+    contentItem clj ON cl._id = clj.list_id
+LEFT JOIN
+    movie m ON clj.movie_id = m.id AND movie_id != -1
+LEFT JOIN
+    show s ON clj.show_id = s.id AND show_id != -1;
+
+libraryContentList:
+SELECT * FROM contentListView
+WHERE contentListView.inLibrary AND (
+    :query = ''
+OR
+    contentListView.list_id IN (
+        SELECT DISTINCT(list_id)
+        FROM
+            contentItem sub_clj
+        LEFT JOIN
+            movie sub_m ON sub_clj.movie_id = sub_m.id
+        LEFT JOIN
+            show sub_s ON sub_clj.show_id = sub_s.id
+        WHERE
+            sub_clj.list_id = list_id
+            AND (
+                sub_m.title LIKE :query
+                OR sub_s.title LIKE :query
+            )
+    )
+    OR
+        list_name LIKE :query
+    OR
+        list_description LIKE :query
+)
+ORDER BY
+    list_id;
