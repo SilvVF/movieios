@@ -1,7 +1,8 @@
 package io.silv.moviemp.data.content
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 
 
 sealed interface ContentPagedType {
@@ -23,24 +24,24 @@ data class Filters(
     val genres: List<Genre>,
     val genreMode: GenreMode,
     val sortingOption: SortingOption,
-    val companies: MutableStateFlow<String>,
-    val keywords: MutableStateFlow<String>,
-    val people: MutableStateFlow<String>,
-    val year: MutableStateFlow<String>,
-    val voteCount: MutableStateFlow<String>,
-    val voteAverage: MutableStateFlow<String>
+    val companies: MutableState<String>,
+    val keywords: MutableState<String>,
+    val people: MutableState<String>,
+    val year: MutableState<String>,
+    val voteCount: MutableState<String>,
+    val voteAverage: MutableState<String>
 ) {
     companion object {
         val default = Filters(
             genres = listOf(),
             genreMode = GenreMode.And,
             sortingOption = SortingOption.PopularityDesc,
-            companies = MutableStateFlow(""),
-            keywords = MutableStateFlow(""),
-            people = MutableStateFlow(""),
-            year = MutableStateFlow(""),
-            voteCount = MutableStateFlow(""),
-            voteAverage = MutableStateFlow("")
+            companies = mutableStateOf(""),
+            keywords = mutableStateOf(""),
+            people = mutableStateOf(""),
+            year = mutableStateOf(""),
+            voteCount = mutableStateOf(""),
+            voteAverage = mutableStateOf("")
         )
     }
 }
@@ -65,9 +66,9 @@ sealed interface GenreMode {
 
 
 data class SearchItem(
-    val text: MutableStateFlow<String>,
+    val text: MutableState<String>,
     val label: String,
-    val error: StateFlow<String?> = MutableStateFlow(null),
+    val error: State<String?> = mutableStateOf(null),
     val placeHolder: String = ""
 )
 

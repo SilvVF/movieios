@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.serialization)
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.sqlDelight)
+    id("org.jetbrains.compose")
     id("com.google.devtools.ksp") version "1.9.23-1.0.20"
     id("de.jensklingenberg.ktorfit")
     alias(libs.plugins.buildkonfig)
@@ -15,6 +16,14 @@ plugins {
 val ktorfitVersion = "1.13.0"
 
 kotlin {
+
+    // export correct artifact to use all classes of library directly from Swift
+    targets.withType(org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget::class.java).all {
+        binaries.withType(org.jetbrains.kotlin.gradle.plugin.mpp.Framework::class.java).all {
+            export("dev.icerock.moko:mvvm-core:0.16.1")
+            export("dev.icerock.moko:mvvm-state:0.16.1")
+        }
+    }
 
     compilerOptions {
         // common compiler options applied to all Kotlin source sets
@@ -42,11 +51,25 @@ kotlin {
             baseName = "shared"
             isStatic = false
             linkerOpts.add("-lsqlite3")
+
+
         }
     }
 
     sourceSets {
         commonMain.dependencies {
+            api("dev.icerock.moko:mvvm-core:0.16.1") // only ViewModel, EventsDispatcher, Dispatchers.UI
+            api("dev.icerock.moko:mvvm-flow:0.16.1") // api mvvm-core, CFlow for native and binding extensions
+            api("dev.icerock.moko:mvvm-state:0.16.1") // api mvvm-livedata, ResourceState class and extensions
+            api("dev.icerock.moko:mvvm-flow-resources:0.16.1") // api mvvm-core, moko-resources, extensions for Flow with moko-resources
+
+            // compose multiplatform
+            api("dev.icerock.moko:mvvm-compose:0.16.1") // api mvvm-core, getViewModel for Compose Multiplatform
+            api("dev.icerock.moko:mvvm-flow-compose:0.16.1") // api mvvm-flow, binding extensions for Compose Multiplatform
+
+            implementation("org.jetbrains.compose.runtime:runtime:1.6.10-beta03")
+            implementation("org.jetbrains.compose.foundation:foundation:1.6.10-beta03")
+
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.contentNegotiation)
@@ -75,6 +98,12 @@ kotlin {
             implementation("co.touchlab:stately-isolate:2.0.7")
             implementation("co.touchlab:stately-concurrent-collections:2.0.7")
             implementation("co.touchlab:stately-common:2.0.7")
+
+            api("com.arkivanov.decompose:decompose:3.0.0")
+            api("com.arkivanov.decompose:extensions-compose:3.0.0")
+        }
+        commonTest.dependencies {
+            implementation("dev.icerock.moko:mvvm-test:0.16.1")
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.driver.android)

@@ -3,6 +3,9 @@ package io.silv.moviemp
 import co.touchlab.kermit.Logger
 import co.touchlab.kermit.NoTagFormatter
 import co.touchlab.kermit.platformLogWriter
+import io.silv.moviemp.data.content.contentModule
+import io.silv.moviemp.data.network.networkModule
+import io.silv.moviemp.database.databaseModule
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
@@ -44,7 +47,7 @@ fun initKoin(additionalModules: List<Module>): KoinApplication {
             }
         )
         modules(
-            additionalModules + platformModule + coreModule
+            additionalModules + platformModule + coreModule + contentModule + databaseModule + networkModule
         )
     }
 
