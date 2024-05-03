@@ -2,8 +2,10 @@ package io.silv.moviemp.data.network.service.tmdb
 
 import io.ktor.client.plugins.api.ClientPlugin
 import io.ktor.client.plugins.api.createClientPlugin
+import io.ktor.client.request.bearerAuth
 import io.ktor.client.utils.CacheControl
 import io.silv.moviemp.data.network.ratelimit.TokenBuckets
+import io.silv.wutnextios.BuildKonfig
 import kotlinx.coroutines.ensureActive
 import kotlin.coroutines.coroutineContext
 import kotlin.properties.Delegates
@@ -27,11 +29,13 @@ val TokenBucketPlugin: ClientPlugin<TokenBucketPluginConfig> =
                 .withFixedIntervalRefillStrategy(permits, period)
                 .build()
 
-        onRequest { _, _->
+        onRequest { req, _->
 
             coroutineContext.ensureActive()
 
             bucket.consume(permits)
+
+            req.bearerAuth(BuildKonfig.TMDB_ACCESS_TOKEN)
 
             coroutineContext.ensureActive()
         }

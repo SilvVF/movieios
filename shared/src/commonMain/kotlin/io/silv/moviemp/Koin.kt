@@ -26,6 +26,23 @@ internal inline fun <reified T> Scope.getWith(vararg params: Any?): T {
 
 expect val platformModule: Module
 
+internal object Log {
+
+    val logger = object : org.koin.core.logger.Logger() {
+        override fun display(level: Level, msg: MESSAGE) {
+            with(Logger) {
+                when(level) {
+                    DEBUG -> d { msg }
+                    INFO -> i { msg }
+                    WARNING -> w() { msg }
+                    ERROR -> e() { msg }
+                    NONE -> Unit
+                }
+            }
+        }
+    }
+}
+
 fun initKoin(additionalModules: List<Module>): KoinApplication {
 
     Logger.setLogWriters(platformLogWriter(NoTagFormatter))

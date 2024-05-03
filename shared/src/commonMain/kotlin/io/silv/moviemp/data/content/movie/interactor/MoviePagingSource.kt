@@ -1,14 +1,23 @@
 package io.silv.moviemp.data.content.movie.interactor
 
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.HttpHeaders
+import io.ktor.http.headers
+import io.silv.movie.network.model.movie.MovieListResponse
+import io.silv.moviemp.core.SMovie
 import io.silv.moviemp.data.content.Filters
 import io.silv.moviemp.data.content.GenreMode
 import io.silv.moviemp.data.content.movie.SourceMoviePagingSource
-import io.silv.moviemp.core.SMovie
+import io.silv.moviemp.data.network.TMDBClient
 import io.silv.moviemp.data.network.model.toSMovie
 import io.silv.moviemp.data.network.service.tmdb.TMDBConstants
 import io.silv.moviemp.data.network.service.tmdb.TMDBConstants.JOIN_MODE_MASK_AND
 import io.silv.moviemp.data.network.service.tmdb.TMDBConstants.JOIN_MODE_MASK_OR
 import io.silv.moviemp.data.network.service.tmdb.TMDBMovieService
+import io.silv.wutnextios.BuildKonfig
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 data class MoviesPage(val movies: List<SMovie>, val hasNextPage: Boolean)
 
@@ -24,12 +33,6 @@ class DiscoverMoviesPagingSource(
                 if(filters.genreMode == GenreMode.Or) JOIN_MODE_MASK_OR else JOIN_MODE_MASK_AND
             ),
             sortBy = filters.sortingOption.sort,
-            companies = filters.companies.value.ifBlank { null },
-            people = filters.people.value.ifBlank { null },
-            keywords = filters.keywords.value.ifBlank { null },
-            year = filters.year.value.toIntOrNull(),
-            voteAverage = filters.voteAverage.value.toFloatOrNull(),
-            voteCount = filters.voteCount.value.toFloatOrNull()
         )
 
         return MoviesPage(
@@ -80,11 +83,17 @@ class TopRatedMoviePagingSource(
     private val movieService: TMDBMovieService
 ): SourceMoviePagingSource() {
 
+    val koin = object : KoinComponent{}
+    val client by koin.inject<TMDBClient>()
+
     override suspend fun getNextPage(page: Int): MoviesPage {
-        val response = movieService.movieList(
-            type = TMDBMovieService.MovieType.TopRated.toString(),
-            page = page
-        )
+        val response = client
+            .get("https://api.themoviedb.org/3/movie/${TMDBMovieService.MovieType.TopRated}?page=$page") {
+                headers {
+                    append(HttpHeaders.Authorization, BuildKonfig.TMDB_ACCESS_TOKEN)
+                }
+            }
+            .body<MovieListResponse>()
 
         return MoviesPage(
             movies = response.results.map { it.toSMovie() },
@@ -115,12 +124,10 @@ class PopularMoviePagingSource(
 ): SourceMoviePagingSource() {
 
     override suspend fun getNextPage(page: Int): MoviesPage {
-
         val response = movieService.movieList(
             type = TMDBMovieService.MovieType.Popular.toString(),
             page = page
         )
-
         return MoviesPage(
             movies = response.results.map { it.toSMovie() },
             hasNextPage = response.page < response.totalPages

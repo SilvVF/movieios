@@ -30,26 +30,26 @@ android {
         }
     }
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true
 
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
 }
 
 dependencies {
     implementation(projects.shared)
 
-
-    implementation(libs.koin.core)
-    implementation(libs.koin.android)
     implementation(libs.kotlinx.datetime)
-    implementation(libs.coil.compose)
 
-    implementation(libs.bundles.androidx.compose)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.compose.viewmodel)
+    implementation(libs.androidx.compose.lifecycle.runtime)
+    implementation(libs.androidx.compose.navigation)
+    implementation(libs.bundles.koin.android.bundle)
 
-    coreLibraryDesugaring(libs.android.desugar)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.bundles.compose.android.bundle)
 }

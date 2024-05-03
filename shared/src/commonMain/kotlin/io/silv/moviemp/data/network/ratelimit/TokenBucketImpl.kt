@@ -16,6 +16,7 @@
 
 package io.silv.movie.network.ratelimit
 
+import io.silv.moviemp.data.network.ratelimit.TokenBucket
 import io.silv.moviemp.data.network.ratelimit.withReentrantLock
 import kotlinx.coroutines.sync.Mutex
 

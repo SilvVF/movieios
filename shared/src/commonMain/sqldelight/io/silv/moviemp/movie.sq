@@ -3,7 +3,7 @@ import kotlin.Int;
 import kotlin.String;
 import kotlin.collections.List;
 
-CREATE TABLE movie (
+CREATE TABLE movie_ (
     id INTEGER PRIMARY KEY NOT NULL,
     title TEXT NOT NULL,
     overview TEXT NOT NULL,
@@ -23,18 +23,18 @@ CREATE TABLE movie (
     favorite_modified_at INTEGER
 );
 
-CREATE INDEX library_favorite_index ON movie(favorite) WHERE favorite = 1;
+CREATE INDEX library_favorite_index ON movie_(favorite) WHERE favorite = 1;
 
 CREATE TRIGGER update_last_favorite_at_movies
-AFTER UPDATE OF favorite ON movie
+AFTER UPDATE OF favorite ON movie_
 BEGIN
-  UPDATE movie
+  UPDATE movie_
   SET favorite_modified_at = strftime('%s', 'now')
   WHERE id = new.id;
 END;
 
 CREATE TRIGGER delete_movie_from_lists
-AFTER DELETE ON movie
+AFTER DELETE ON movie_
 FOR EACH ROW
 BEGIN
   DELETE FROM contentItem
@@ -42,10 +42,10 @@ BEGIN
 END;
 
 CREATE TRIGGER update_last_modified_at_movies
-AFTER UPDATE ON movie
+AFTER UPDATE ON movie_
 FOR EACH ROW
 BEGIN
-  UPDATE movie
+  UPDATE movie_
   SET last_modified_at = strftime('%s', 'now')
   WHERE id = new.id;
 END;
@@ -59,17 +59,17 @@ SELECT
        LEFT JOIN contentList ON contentItem.list_id = contentList._id
        WHERE movie_id = id AND contentList.in_library
     ) AS inLibraryLists
-FROM movie m WHERE favorite AND (title LIKE :query OR :query = '');
+FROM movie_ m WHERE favorite AND (title LIKE :query OR :query = '');
 
 selectById:
-SELECT movie.*,
+SELECT movie_.*,
 (
    SELECT DISTINCT COUNT(contentItem.list_id)
    FROM contentItem
    LEFT JOIN contentList ON contentItem.list_id = contentList._id
    WHERE movie_id = id AND contentList.in_library
 )
-FROM movie WHERE id = :id LIMIT 1;
+FROM movie_ WHERE id = :id LIMIT 1;
 
 
 selectMoviePartialById:
@@ -79,20 +79,20 @@ SELECT id, title, poster_url, poster_last_updated, favorite, last_modified_at, p
    FROM contentItem
    LEFT JOIN contentList ON contentItem.list_id = contentList._id
    WHERE movie_id = id AND contentList.in_library
-) FROM movie WHERE id = :id LIMIT 1;
+) FROM movie_ WHERE id = :id LIMIT 1;
 
 selectAll:
-SELECT * FROM movie;
+SELECT * FROM movie_;
 
 insert:
-INSERT OR IGNORE INTO movie(id, title, overview, genres, genreIds, original_language, vote_count, release_date, poster_url, poster_last_updated, favorite, externalUrl, popularity, status, production_companies, last_modified_at)
+INSERT OR IGNORE INTO movie_(id, title, overview, genres, genreIds, original_language, vote_count, release_date, poster_url, poster_last_updated, favorite, externalUrl, popularity, status, production_companies, last_modified_at)
 VALUES (:id, :title,:overview,:genres, :genreIds,:originalLanguage,:voteCount,:releaseDate, :posterUrl, :posterLastUpdated, :favorite, :externalUrl, :popularity, :status, :productionCompanies, strftime('%s', 'now'));
 
 lastInsertRowId:
 SELECT last_insert_rowid();
 
 update:
-UPDATE movie SET
+UPDATE movie_ SET
     title = COALESCE(:title, title),
     overview = COALESCE(:overview, overview),
     genres = COALESCE(:genres, genres),

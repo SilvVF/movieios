@@ -3,13 +3,12 @@ package io.silv.moviemp.data.network.service.tmdb
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.Query
-import io.silv.movie.network.model.person.CreditsResponse
 import io.silv.movie.network.model.movie.MovieDetailsResponse
 import io.silv.movie.network.model.movie.MovieDiscoverResponse
 import io.silv.movie.network.model.movie.MovieListResponse
 import io.silv.movie.network.model.movie.MovieSearchResponse
 import io.silv.movie.network.model.movie.MovieVideoResponse
-
+import io.silv.movie.network.model.person.CreditsResponse
 
 interface TMDBMovieService {
 
@@ -38,12 +37,7 @@ interface TMDBMovieService {
     @GET("search/movie")
     suspend fun search(
         @Query("query") query: String,
-        @Query("page") page: Int = 1,
-        @Query("include_adult") includeAdult: Boolean? = false,
-        @Query("language") language: String? = "en-US",
-        @Query("primary_release_year") primaryReleaseYear: String? = null,
-        @Query("region") region: String? = null,
-        @Query("year") year: String? = null
+        @Query("page") page: Int = 1
     ): MovieSearchResponse
 
     @GET("discover/movie")

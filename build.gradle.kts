@@ -1,9 +1,19 @@
+@file:Suppress("DSL_SCOPE_VIOLATION")
+buildscript {
+    dependencies {
+        classpath(libs.buildkonfig.gradle.plugin)
+    }
+}
+
+
 plugins {
-    alias(libs.plugins.kotlinMultiplatform).apply(false)
-    alias(libs.plugins.androidLibrary).apply(false)
-    alias(libs.plugins.sqlDelight).apply(false)
-    alias(libs.plugins.jetbrains.compose).apply(false)
-    alias(libs.plugins.serialization).apply(false)
-    id("de.jensklingenberg.ktorfit") version "1.13.0" apply false
-    alias(libs.plugins.buildkonfig).apply(false)
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.multiplatform) apply false
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.skie) apply false
+    alias(libs.plugins.nativecoroutines) apply false
+    alias(libs.plugins.ktorfit) apply false
+    alias(libs.plugins.molecule) apply false
 }

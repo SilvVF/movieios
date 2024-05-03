@@ -3,17 +3,21 @@ import shared
 
 @main
 struct iOSApp: App {
-    
-    var screenModel: MovieScreenModel
 
+    private let assembler = AppAssembler()
+
+    
     init() {
-        DependencyInjectionKt.doInitKoinIos(userDefaults: UserDefaults())
-        screenModel = MovieScreenModel.companion.create()
+        KoinApplication.start()
     }
     
 	var body: some Scene {
 		WindowGroup {
-			ContentView()
+            VStack {
+                ContentView(assembler: assembler)
+            }
 		}
 	}
 }
+
+

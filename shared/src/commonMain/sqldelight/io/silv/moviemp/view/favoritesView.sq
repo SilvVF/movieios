@@ -16,7 +16,7 @@ SELECT
             WHERE movie_id = id AND contentList.in_library
 
         ) AS inLists
-    FROM movie WHERE favorite = 1
+    FROM movie_ WHERE favorite = 1
 
     UNION
 
@@ -61,7 +61,7 @@ ORDER BY title DESC;
 selectFavoriteMostRecent:
   SELECT
         favorite_modified_at
-    FROM movie
+    FROM movie_
 
     UNION
 

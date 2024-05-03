@@ -1,9 +1,9 @@
 package io.silv.moviemp.data.content.tv.interactor
 
+import io.silv.moviemp.core.STVShow
 import io.silv.moviemp.data.content.Filters
 import io.silv.moviemp.data.content.GenreMode
 import io.silv.moviemp.data.content.tv.SourceTVPagingSource
-import io.silv.moviemp.core.STVShow
 import io.silv.moviemp.data.network.model.toSTVShow
 import io.silv.moviemp.data.network.service.tmdb.TMDBConstants
 import io.silv.moviemp.data.network.service.tmdb.TMDBTVShowService
@@ -24,12 +24,6 @@ class DiscoverTVPagingSource(
                 if(filters.genreMode == GenreMode.Or) TMDBConstants.JOIN_MODE_MASK_OR else TMDBConstants.JOIN_MODE_MASK_AND
             ),
             sortBy = filters.sortingOption.sort,
-            companies = filters.companies.value.ifBlank { null },
-            people = filters.people.value.ifBlank { null },
-            keywords = filters.keywords.value.ifBlank { null },
-            year = filters.year.value.toIntOrNull(),
-            voteAverage = filters.voteAverage.value.toFloatOrNull(),
-            voteCount = filters.voteCount.value.toFloatOrNull()
         )
 
         return TVPage(

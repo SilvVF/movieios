@@ -2,9 +2,10 @@ package io.silv.moviemp.database
 
 import app.cash.sqldelight.ColumnAdapter
 import io.silv.Database
-import io.silv.moviemp.Movie
+import io.silv.moviemp.Movie_
 import io.silv.moviemp.Show
 import org.koin.dsl.module
+
 
 private val listIntAdapter = object : ColumnAdapter<List<Int>, String> {
     override fun decode(databaseValue: String) =
@@ -30,7 +31,7 @@ val databaseModule = module {
     single {
         Database(
             driver = get(),
-            movieAdapter = Movie.Adapter(
+            movie_Adapter = Movie_.Adapter(
                 genreIdsAdapter = listIntAdapter,
                 genresAdapter = listStringAdapter,
                 production_companiesAdapter = listStringAdapter

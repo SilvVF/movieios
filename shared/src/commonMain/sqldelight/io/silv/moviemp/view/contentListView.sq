@@ -38,7 +38,7 @@ FROM
 LEFT JOIN
     contentItem clj ON cl._id = clj.list_id
 LEFT JOIN
-    movie m ON clj.movie_id = m.id AND movie_id != -1
+    movie_ m ON clj.movie_id = m.id AND movie_id != -1
 LEFT JOIN
     show s ON clj.show_id = s.id AND show_id != -1;
 
@@ -52,7 +52,7 @@ OR
         FROM
             contentItem sub_clj
         LEFT JOIN
-            movie sub_m ON sub_clj.movie_id = sub_m.id
+            movie_ sub_m ON sub_clj.movie_id = sub_m.id
         LEFT JOIN
             show sub_s ON sub_clj.show_id = sub_s.id
         WHERE

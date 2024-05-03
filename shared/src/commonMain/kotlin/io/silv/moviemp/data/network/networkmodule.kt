@@ -4,10 +4,11 @@ package io.silv.moviemp.data.network
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.DefaultRequest
-import io.ktor.client.plugins.HttpSend
 import io.ktor.client.plugins.cache.HttpCache
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.plugin
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.http.HttpHeaders
+import io.ktor.http.parameters
 import io.ktor.serialization.kotlinx.json.json
 import io.silv.moviemp.data.network.service.piped.PipedApi
 import io.silv.moviemp.data.network.service.tmdb.TMDBMovieService
@@ -15,8 +16,8 @@ import io.silv.moviemp.data.network.service.tmdb.TMDBPersonService
 import io.silv.moviemp.data.network.service.tmdb.TMDBRecommendationService
 import io.silv.moviemp.data.network.service.tmdb.TMDBTVShowService
 import io.silv.moviemp.data.network.service.tmdb.TokenBucketPlugin
+import io.silv.wutnextios.BuildKonfig
 import kotlinx.serialization.json.Json
-import moviemp.shared.BuildConfig
 import org.koin.dsl.module
 import kotlin.time.Duration.Companion.seconds
 
@@ -25,7 +26,7 @@ typealias TMDBClient = HttpClient
 val networkModule =
     module {
 
-        val accessToken = BuildConfig.TMDB_ACCESS_TOKEN
+        val accessToken = BuildKonfig.TMDB_ACCESS_TOKEN
 
         single {
             Json {
@@ -38,6 +39,7 @@ val networkModule =
         single<TMDBClient> {
             HttpClient(get()) {
                 install(HttpCache)
+                install(Logging)
                 install(ContentNegotiation) {
                     json(get())
                 }
@@ -46,7 +48,11 @@ val networkModule =
                     period = 1.seconds
                 }
                 install(DefaultRequest) {
-                    headers.append("Authorization", "Bearer $accessToken")
+                    headers.append(HttpHeaders.Authorization, accessToken)
+
+                    parameters {
+                        append("api_key", BuildKonfig.TMDB_API_KEY)
+                    }
                 }
             }
         }
@@ -56,7 +62,7 @@ val networkModule =
                 .baseUrl("https://pipedapi.adminforge.de/")
                 .httpClient(HttpClient(engine = get()))
                 .build()
-                .create<PipedApi>()
+                .create()
         }
 
         single<Ktorfit> {

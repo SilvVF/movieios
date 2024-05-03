@@ -1,34 +1,44 @@
+
+import co.touchlab.skie.configuration.EnumInterop
+import co.touchlab.skie.configuration.FlowInterop
+import co.touchlab.skie.configuration.SealedInterop
+import co.touchlab.skie.configuration.SuspendInterop
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.serialization)
-    alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.sqlDelight)
-    id("org.jetbrains.compose")
-    id("com.google.devtools.ksp") version "1.9.23-1.0.20"
-    id("de.jensklingenberg.ktorfit")
-    alias(libs.plugins.buildkonfig)
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.nativecoroutines)
+    alias(libs.plugins.ktorfit)
+    id("com.codingfeline.buildkonfig")
+    id("app.cash.sqldelight") version libs.versions.sqldelight
+    alias(libs.plugins.skie)
 }
 
-val ktorfitVersion = "1.13.0"
+
+buildkonfig {
+    val properties = Properties().also {
+        it.load(project.rootProject.file("local.properties").inputStream())
+    }
+    packageName = "io.silv.wutnextios"
+    defaultConfigs {
+        buildConfigField(STRING, "TMDB_API_KEY", properties.getProperty("TMDB_API_KEY"))
+        buildConfigField(STRING, "TMDB_ACCESS_TOKEN", properties.getProperty("TMDB_ACCESS_TOKEN"))
+        buildConfigField(STRING, "SUPABASE_URL", properties.getProperty("SUPABASE_URL"))
+        buildConfigField(STRING, "SUPABSE_ANON_KEY", properties.getProperty("SUPABSE_ANON_KEY"))
+        buildConfigField(STRING, "GOOGLE_WEB_CLIENT_ID", properties.getProperty("GOOGLE_WEB_CLIENT_ID"))
+    }
+}
 
 kotlin {
-
-    // export correct artifact to use all classes of library directly from Swift
-    targets.withType(org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget::class.java).all {
-        binaries.withType(org.jetbrains.kotlin.gradle.plugin.mpp.Framework::class.java).all {
-            export("dev.icerock.moko:mvvm-core:0.16.1")
-            export("dev.icerock.moko:mvvm-state:0.16.1")
-        }
-    }
-
     compilerOptions {
         // common compiler options applied to all Kotlin source sets
         freeCompilerArgs.add("-Xexpect-actual-classes")
-
     }
     androidTarget {
         compilations.all {
@@ -51,90 +61,72 @@ kotlin {
             baseName = "shared"
             isStatic = false
             linkerOpts.add("-lsqlite3")
-
-
         }
     }
 
     sourceSets {
+        all {
+            languageSettings.optIn("kotlin.experimental.ExperimentalObjCName")
+            languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi")
+        }
         commonMain.dependencies {
-            api("dev.icerock.moko:mvvm-core:0.16.1") // only ViewModel, EventsDispatcher, Dispatchers.UI
-            api("dev.icerock.moko:mvvm-flow:0.16.1") // api mvvm-core, CFlow for native and binding extensions
-            api("dev.icerock.moko:mvvm-state:0.16.1") // api mvvm-livedata, ResourceState class and extensions
-            api("dev.icerock.moko:mvvm-flow-resources:0.16.1") // api mvvm-core, moko-resources, extensions for Flow with moko-resources
+            api("com.rickclephas.kmm:kmm-viewmodel-core:1.0.0-ALPHA-20")
 
-            // compose multiplatform
-            api("dev.icerock.moko:mvvm-compose:0.16.1") // api mvvm-core, getViewModel for Compose Multiplatform
-            api("dev.icerock.moko:mvvm-flow-compose:0.16.1") // api mvvm-flow, binding extensions for Compose Multiplatform
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.coroutines.core)
 
-            implementation("org.jetbrains.compose.runtime:runtime:1.6.10-beta03")
-            implementation("org.jetbrains.compose.foundation:foundation:1.6.10-beta03")
+            implementation(libs.jetbrains.compose.plugin)
+            implementation(libs.jetbrains.compose.compiler)
+            implementation(libs.jetbrains.compose.runtime)
 
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.logging)
-            implementation(libs.ktor.client.contentNegotiation)
-            implementation(libs.ktor.client.serialization)
-            implementation(libs.sqldelight.coroutines)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation("app.cash.paging:paging-compose-common:3.3.0-alpha02-0.5.1")
+
+            implementation("app.cash.paging:paging-common:3.3.0-alpha02-0.5.1")
+            implementation("app.cash.sqldelight:androidx-paging3-extensions:2.0.1")
+
+            implementation(libs.skie.annotations)
+
+            implementation(libs.kermit)
+
             implementation(libs.sqldelight.runtime)
+            implementation(libs.sqldelight.coroutines)
 
-            implementation(libs.paging.common)
-            implementation(libs.paging.compose.common)
-            implementation(libs.paging.testing)
-
-            implementation(libs.androidx.paging3.extensions)
+            implementation(libs.ktorfit)
 
             implementation(libs.koin.core)
-
-            implementation("co.touchlab:kermit:2.0.3")
-            implementation("de.jensklingenberg.ktorfit:ktorfit-lib:$ktorfitVersion")
-
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1-Beta")
-            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
-
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
             implementation("co.touchlab:stately-iso-collections:2.0.7")
             implementation("co.touchlab:stately-concurrency:2.0.7")
             implementation("co.touchlab:stately-isolate:2.0.7")
             implementation("co.touchlab:stately-concurrent-collections:2.0.7")
             implementation("co.touchlab:stately-common:2.0.7")
-
-            api("com.arkivanov.decompose:decompose:3.0.0")
-            api("com.arkivanov.decompose:extensions-compose:3.0.0")
-        }
-        commonTest.dependencies {
-            implementation("dev.icerock.moko:mvvm-test:0.16.1")
         }
         androidMain.dependencies {
-            implementation(libs.sqldelight.driver.android)
-            implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.androidx.paging)
             implementation(libs.ktor.client.okhttp)
-            implementation(libs.androidx.core)
+            implementation(libs.sqldelight.android)
         }
         iosMain.dependencies {
-            implementation(libs.sqldelight.driver.ios)
-            implementation(libs.sqliter)
-            implementation(libs.ktor.client.ios)
-            implementation(libs.paging.runtime.uikit)
+            api(libs.paging.runtime.uikit)
+            implementation(libs.ktor.client.darwin)
+            implementation(libs.sqldelight.native)
         }
     }
 }
 
 
-buildConfig {
-    val properties = Properties().also {
-        it.load(project.rootProject.file("local.properties").inputStream())
-    }
-    // default config is required
-    buildConfigField("TMDB_API_KEY", properties.getProperty("TMDB_API_KEY"))
-    buildConfigField("TMDB_ACCESS_TOKEN", properties.getProperty("TMDB_ACCESS_TOKEN"))
-    buildConfigField("SUPABASE_URL", properties.getProperty("SUPABASE_URL"))
-    buildConfigField("SUPABSE_ANON_KEY", properties.getProperty("SUPABSE_ANON_KEY"))
-    buildConfigField("GOOGLE_WEB_CLIENT_ID", properties.getProperty("GOOGLE_WEB_CLIENT_ID"))
+task("testClasses") {
+    return@task
 }
 
 dependencies {
-    with("de.jensklingenberg.ktorfit:ktorfit-ksp:$ktorfitVersion") {
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.paging.runtime.ktx)
+    with("de.jensklingenberg.ktorfit:ktorfit-ksp:${libs.versions.ktorfit.get()}") {
         add("kspCommonMainMetadata", this)
         add("kspAndroid", this)
         add("kspAndroidTest", this)
@@ -146,6 +138,7 @@ dependencies {
         add("kspIosSimulatorArm64Test", this)
     }
 }
+
 
 sqldelight {
     databases.create("Database") {
@@ -162,5 +155,18 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+
+skie {
+    features {
+        group {
+            SealedInterop.Enabled(true)
+            EnumInterop.Enabled(true)
+            coroutinesInterop.set(true)
+            SuspendInterop.Enabled(false)
+            FlowInterop.Enabled(true)
+        }
     }
 }

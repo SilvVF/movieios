@@ -1,9 +1,5 @@
 package io.silv.moviemp.data.content
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
-
 
 sealed interface ContentPagedType {
 
@@ -24,24 +20,12 @@ data class Filters(
     val genres: List<Genre>,
     val genreMode: GenreMode,
     val sortingOption: SortingOption,
-    val companies: MutableState<String>,
-    val keywords: MutableState<String>,
-    val people: MutableState<String>,
-    val year: MutableState<String>,
-    val voteCount: MutableState<String>,
-    val voteAverage: MutableState<String>
 ) {
     companion object {
         val default = Filters(
             genres = listOf(),
             genreMode = GenreMode.And,
             sortingOption = SortingOption.PopularityDesc,
-            companies = mutableStateOf(""),
-            keywords = mutableStateOf(""),
-            people = mutableStateOf(""),
-            year = mutableStateOf(""),
-            voteCount = mutableStateOf(""),
-            voteAverage = mutableStateOf("")
         )
     }
 }
@@ -66,9 +50,7 @@ sealed interface GenreMode {
 
 
 data class SearchItem(
-    val text: MutableState<String>,
     val label: String,
-    val error: State<String?> = mutableStateOf(null),
     val placeHolder: String = ""
 )
 

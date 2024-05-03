@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.silv.movie.network.ratelimit
+package io.silv.moviemp.data.network.ratelimit
 
 
 /**

@@ -2,8 +2,8 @@ package io.silv.moviemp.data.content.movie
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import io.silv.moviemp.data.content.movie.interactor.MoviesPage
 import io.silv.moviemp.core.SMovie
+import io.silv.moviemp.data.content.movie.interactor.MoviesPage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
@@ -18,8 +18,10 @@ abstract class SourceMoviePagingSource : PagingSource<Long, SMovie>() {
         val moviesPage = try {
             withContext(Dispatchers.IO) {
                 getNextPage(page.toInt())
-                    .takeIf { it.movies.isNotEmpty() }
-                    ?: error("Empty page")
+                    .takeIf {
+                        it.movies.isNotEmpty()
+                    }
+                    ?: error("page was empty")
             }
         } catch (e: Exception) {
             return LoadResult.Error(e)
